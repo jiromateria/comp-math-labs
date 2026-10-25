@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import os
 
 # --- 1. ФУНКЦИИ И ИХ АНАЛИТИЧЕСКИЕ ПРОИЗВОДНЫЕ ---
+# Обратите внимание: здесь мы используем обычные строки, 
+# символы $ для формул добавим уже при построении графиков.
 def f1(x): return np.sin(x**2)
 def df1(x): return 2 * x * np.cos(x**2)
 
@@ -19,7 +21,6 @@ def f5(x): return (x + 3)**0.5
 def df5(x): return 0.5 / np.sqrt(x + 3)
 
 # --- 2. МЕТОДЫ ЧИСЛЕННОГО ДИФФЕРЕНЦИРОВАНИЯ ---
-# Формулы строго по заданию
 def method1(f, x, h): 
     return (f(x + h) - f(x)) / h
 
@@ -37,24 +38,25 @@ def method5(f, x, h):
 
 # --- 3. ОСНОВНАЯ ЛОГИКА ---
 def main():
-    # Создаем папку для картинок, если ее нет
     if not os.path.exists('pictures'):
         os.makedirs('pictures')
 
-    # Точка, в которой считаем производную (можно выбрать любую, например 1.0)
     x0 = 1.0 
     
-    # Список шагов h_n = 2 / 2^n, от n=1 до 21
-    n_values = np.arange(1, 22)
+    # ИЗМЕНЕНИЕ 1: Делаем больше точек (60 штук вместо 21) для плавности графика.
+    # np.linspace(1, 21, 60) создает 60 равномерных значений от 1 до 21.
+    # Если преподаватель строго требует ровно 21 точку, замените эту строку на: n_values = np.arange(1, 22)
+    n_values = np.linspace(1, 21, 60) 
+    
     h_values = 2.0 / (2.0 ** n_values)
 
-    # Список функций: (функция, производная, название, индекс)
+    # ИЗМЕНЕНИЕ 2: Оборачиваем формулы в символы $ для правильного отображения
     functions = [
-        (f1, df1, r'\(f(x) = \sin(x^2)\)', 1),
-        (f2, df2, r'\(f(x) = \cos(\sin(x))\)', 2),
-        (f3, df3, r'\(f(x) = \exp(\sin(\cos(x)))\)', 3),
-        (f4, df4, r'\(f(x) = \ln(x+3)\)', 4),
-        (f5, df5, r'\(f(x) = (x+3)^{0.5}\)', 5)
+        (f1, df1, r'$f(x) = \sin(x^2)$', 1),
+        (f2, df2, r'$f(x) = \cos(\sin(x))$', 2),
+        (f3, df3, r'$f(x) = \exp(\sin(\cos(x)))$', 3),
+        (f4, df4, r'$f(x) = \ln(x+3)$', 4),
+        (f5, df5, r'$f(x) = (x+3)^{0.5}$', 5)
     ]
 
     methods = [
@@ -65,43 +67,40 @@ def main():
         (method5, 'Метод 5 (6-й порядок)')
     ]
 
-    # Включаем красивый шрифт для графиков
+    # Настройки шрифтов
     plt.rcParams['font.family'] = 'sans-serif'
-    plt.rcParams['mathtext.fontset'] = 'cm' # Шрифт как в LaTeX для формул
+    plt.rcParams['font.sans-serif'] = ['Arial', 'DejaVu Sans'] # Чтобы русские буквы не квадратиками были
+    plt.rcParams['mathtext.fontset'] = 'cm' 
 
-    for func, dfunc, title, idx in functions:
+    for func, dfunc, title_formula, idx in functions:
         plt.figure(figsize=(10, 6))
-        
-        # Идеальное (точное) значение производной
         exact_val = dfunc(x0)
 
-        # Считаем и строим графики для каждого метода
         for method, method_name in methods:
             errors = []
             for h in h_values:
-                # Численное значение
                 num_val = method(func, x0, h)
-                # Абсолютная погрешность
                 error = np.abs(num_val - exact_val)
                 errors.append(error)
             
-            # Строим график в логарифмическом масштабе по обеим осям
-            plt.loglog(h_values, errors, marker='.', label=method_name, linewidth=2)
+            # ИЗМЕНЕНИЕ 3: Увеличили размер маркеров (ms) и толщину линий (lw)
+            # marker='o' (кружочки) смотрится аккуратнее точек
+            plt.loglog(h_values, errors, marker='o', markersize=4, linewidth=2, label=method_name, alpha=0.8)
 
-        # --- Красивое оформление графика ---
-        plt.title(f'Абсолютная погрешность {title}', fontsize=14)
-        plt.xlabel(r'Шаг дифференцирования \(h\)', fontsize=12)
-        plt.ylabel(r'Абсолютная погрешность \(|f\'_{num} - f\'_{exact}|\)', fontsize=12)
-        plt.grid(True, which="both", ls="--", alpha=0.7) # Сетка для лог. шкалы
-        plt.legend(fontsize=10)
+        # ИЗМЕНЕНИЕ 4: Правильные символы $ для заголовка и осей
+        plt.title(f'Абсолютная погрешность {title_formula}', fontsize=14)
+        plt.xlabel(r'Шаг дифференцирования $h$', fontsize=12)
+        plt.ylabel(r'Абсолютная погрешность $|f^{\prime}_{num} - f^{\prime}_{exact}|$', fontsize=12)
         
-        # Сохранение графика
+        plt.grid(True, which="both", ls="--", alpha=0.7)
+        plt.legend(fontsize=10, loc='best')
+        
         filename = f'pictures/plot_{idx}.png'
         plt.tight_layout()
-        plt.savefig(filename, dpi=300) # dpi=300 для хорошего качества
-        plt.close() # Закрываем окно, чтобы не забивать память
+        plt.savefig(filename, dpi=300)
+        plt.close()
         print(f'Сохранен график: {filename}')
 
 if __name__ == '__main__':
     main()
-    print('Все графики успешно построены и сохранены в папку pictures!')
+    print('Все графики успешно перестроены!')
